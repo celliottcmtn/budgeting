@@ -34,12 +34,13 @@ available_to_spend = st.session_state['balance'] - sum(st.session_state['expense
 if available_to_spend < 0:
     available_to_spend = 0
 
+expense_inputs = {}
 for category in expense_categories:
     current_expense = st.session_state['expenses'][current_month].get(category, 0)
     max_val = int(float(available_to_spend)) if available_to_spend is not None else 0
     initial_value = min(current_expense, max_val)
 
-    st.session_state['expenses'][current_month][category] = st.number_input(
+    expense_inputs[category] = st.number_input(
         f"Amount spent on {category}",
         min_value=0,
         max_value=max_val,
@@ -64,17 +65,14 @@ savings_this_month = st.number_input(
 )
 
 if st.button("End Month"):
+    # Update expenses in session state after getting all inputs
+    st.session_state['expenses'][current_month] = expense_inputs
+
     total_spent_this_month = sum(st.session_state['expenses'][current_month].values())
     remaining_balance = st.session_state['balance'] - total_spent_this_month - savings_this_month
     st.session_state['balance'] = float(remaining_balance + st.session_state['monthly_income'])
     st.session_state['savings'] += float(savings_this_month)
     st.session_state['month'] += 1
-    # No need to setdefault here as it's initialized at the beginning
-
-    # Random Events (50% chance)
-    if random.random() < 0.5:
-        # ... (rest of the random event code remains the same)
-        pass
 
     if st.session_state['month'] > 4:
         st.write("Game Over!")
