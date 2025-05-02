@@ -36,33 +36,18 @@ if available_to_spend < 0:
 
 expense_inputs = {}
 for category in expense_categories:
-    max_val = 0
-    if available_to_spend is not None:
-        max_val = int(float(available_to_spend))
-
     initial_value = st.session_state['expenses'][current_month].get(category, 0)
-
-    # Simplified st.number_input call
     expense_inputs[category] = st.number_input(
         f"Amount spent on {category}",
-        value=int(initial_value), # Explicitly cast value to int
+        value=int(initial_value),
         key=f"{category}_{current_month}"
     )
 
 st.subheader("Savings")
-available_for_savings = st.session_state['balance'] - sum(st.session_state['expenses'][current_month].values())
-max_savings = 0
-if available_for_savings is not None and available_for_savings >= 0:
-    max_savings = int(float(available_for_savings))
-
 savings_this_month = st.number_input(
     "Amount to save this month",
-    min_value=0,
-    max_value=int(max_savings) if isinstance(max_savings, (int, float)) else 0,
     value=0,
-    step=1,
-    key=f"savings_{current_month}",
-    key_format=None
+    key=f"savings_{current_month}"
 )
 
 if st.button("End Month"):
