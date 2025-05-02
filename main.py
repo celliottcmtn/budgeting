@@ -31,12 +31,13 @@ if available_to_spend < 0:
     available_to_spend = 0 # Prevent negative max values
 
 for category in expense_categories:
+    initial_expense_value = st.session_state['expenses'][st.session_state['month']][category]
     st.session_state['expenses'][st.session_state['month']][category] = st.number_input(
         f"Amount spent on {category}",
         min_value=0,
-        max_value=int(available_to_spend), # No decimal places
-        value=st.session_state['expenses'][st.session_state['month']][category],
-        step=1 # No decimal places
+        max_value=int(available_to_spend),
+        value=min(initial_expense_value, int(available_to_spend)), # Ensure value is not greater than max
+        step=1
     )
 
 st.subheader("Savings")
