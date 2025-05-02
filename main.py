@@ -43,18 +43,15 @@ remaining_after_expenses = st.session_state['available_this_month'] - total_spen
 expense_inputs = {}
 for category in expense_categories:
     initial_value = st.session_state['expenses'][current_month].get(category, 0)
-    max_val = 0
-    if remaining_after_expenses is not None:
-        try:
-            max_val = int(remaining_after_expenses)
-        except (ValueError, TypeError):
-            max_val = 0
+    # Calculate max_value properly - ensure it's never negative
+    # If remaining_after_expenses is negative, set max_value to 0
+    max_val = max(0, int(remaining_after_expenses)) if remaining_after_expenses is not None else 0
 
     expense_inputs[category] = st.number_input(
         f"Amount spent on {category}",
         min_value=0,
-        max_value=max_val,
-        value=int(initial_value),
+        max_value=max_val,  # This will never be negative now
+        value=min(int(initial_value), max_val),  # Ensure value doesn't exceed max_value
         step=1,
         key=f"{category}_{current_month}",
         label_visibility="visible",
