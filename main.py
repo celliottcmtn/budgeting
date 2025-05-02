@@ -37,15 +37,24 @@ if available_to_spend < 0:
 expense_inputs = {}
 for category in expense_categories:
     current_expense = st.session_state['expenses'][current_month].get(category, 0)
-    max_val = int(float(available_to_spend)) if available_to_spend is not None else 0
+    max_val = 0
+    if available_to_spend is not None:
+        max_val = int(float(available_to_spend))
+
     initial_value = min(current_expense, max_val)
+
+    # Explicitly ensure arguments are numeric
+    min_val_arg = 0
+    max_val_arg = int(max_val) if isinstance(max_val, (int, float)) else 0
+    initial_val_arg = int(initial_value) if isinstance(initial_value, (int, float)) else 0
+    step_arg = 1
 
     expense_inputs[category] = st.number_input(
         f"Amount spent on {category}",
-        min_value=0,
-        max_value=max_val,
-        value=initial_value,
-        step=1,
+        min_value=min_val_arg,
+        max_value=max_val_arg,
+        value=initial_val_arg,
+        step=step_arg,
         key=f"{category}_{current_month}",
         label_visibility="visible",
         key_format=None
@@ -53,11 +62,14 @@ for category in expense_categories:
 
 st.subheader("Savings")
 available_for_savings = st.session_state['balance'] - sum(st.session_state['expenses'][current_month].values())
-max_savings = int(float(available_for_savings)) if available_for_savings is not None and available_for_savings >= 0 else 0
+max_savings = 0
+if available_for_savings is not None and available_for_savings >= 0:
+    max_savings = int(float(available_for_savings))
+
 savings_this_month = st.number_input(
     "Amount to save this month",
     min_value=0,
-    max_value=max_savings,
+    max_value=int(max_savings) if isinstance(max_savings, (int, float)) else 0,
     value=0,
     step=1,
     key=f"savings_{current_month}",
@@ -65,9 +77,7 @@ savings_this_month = st.number_input(
 )
 
 if st.button("End Month"):
-    # Update expenses in session state after getting all inputs
     st.session_state['expenses'][current_month] = expense_inputs
-
     total_spent_this_month = sum(st.session_state['expenses'][current_month].values())
     remaining_balance = st.session_state['balance'] - total_spent_this_month - savings_this_month
     st.session_state['balance'] = float(remaining_balance + st.session_state['monthly_income'])
@@ -76,7 +86,6 @@ if st.button("End Month"):
 
     if st.session_state['month'] > 4:
         st.write("Game Over!")
-        # ... (rest of the game over code remains the same)
         pass
     else:
         st.rerun()
