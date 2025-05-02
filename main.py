@@ -32,16 +32,19 @@ if available_to_spend < 0:
     available_to_spend = 0
 
 for category in expense_categories:
-    initial_expense_value = st.session_state['expenses'][st.session_state['month']][category]
+    current_expense = st.session_state['expenses'][st.session_state['month']].get(category, 0)
+    max_val = int(available_to_spend)
+    initial_value = min(current_expense, max_val) if max_val >= 0 else 0
+
     st.session_state['expenses'][st.session_state['month']][category] = st.number_input(
         f"Amount spent on {category}",
         min_value=0,
-        max_value=int(available_to_spend),
-        value=min(initial_expense_value, int(available_to_spend)),
+        max_value=max_val,
+        value=initial_value,
         step=1,
         key=f"{category}_{st.session_state['month']}",
         label_visibility="visible",
-        key_format=None # This should help remove +/- buttons
+        key_format=None
     )
 
 st.subheader("Savings")
@@ -49,20 +52,20 @@ max_savings = int(st.session_state['balance'] - sum(st.session_state['expenses']
 savings_this_month = st.number_input(
     "Amount to save this month",
     min_value=0,
-    max_value=max_savings,
+    max_value=max_savings if max_savings >= 0 else 0,
     value=0,
     step=1,
     key=f"savings_{st.session_state['month']}",
-    key_format=None # This should also help remove +/- buttons
+    key_format=None
 )
 
 if st.button("End Month"):
     total_spent_this_month = sum(st.session_state['expenses'][st.session_state['month']].values())
     remaining_balance = st.session_state['balance'] - total_spent_this_month - savings_this_month
-    st.session_state['balance'] = float(remaining_balance + st.session_state['monthly_income']) # Add next month's income
+    st.session_state['balance'] = float(remaining_balance + st.session_state['monthly_income'])
     st.session_state['savings'] += float(savings_this_month)
     st.session_state['month'] += 1
-    st.session_state['expenses'].setdefault(st.session_state['month'], {cat: 0 for cat in expense_categories}) # Reset expenses
+    st.session_state['expenses'].setdefault(st.session_state['month'], {cat: 0 for cat in expense_categories})
 
     # Random Events (50% chance)
     if random.random() < 0.5:
