@@ -28,13 +28,14 @@ st.session_state['expenses'].setdefault(st.session_state['month'], {cat: 0 for c
 
 st.subheader("Monthly Expenses")
 available_to_spend = st.session_state['balance'] - sum(st.session_state['expenses'][st.session_state['month']].values())
-if available_to_spend < 0:
-    available_to_spend = 0
+if available_to_spend is None or available_to_spend < 0:
+    max_val = 0
+else:
+    max_val = int(float(available_to_spend)) # Explicitly convert to float then int
 
 for category in expense_categories:
     current_expense = st.session_state['expenses'][st.session_state['month']].get(category, 0)
-    max_val = int(available_to_spend)
-    initial_value = min(current_expense, max_val) if max_val >= 0 else 0
+    initial_value = min(current_expense, max_val)
 
     st.session_state['expenses'][st.session_state['month']][category] = st.number_input(
         f"Amount spent on {category}",
@@ -48,11 +49,12 @@ for category in expense_categories:
     )
 
 st.subheader("Savings")
-max_savings = int(st.session_state['balance'] - sum(st.session_state['expenses'][st.session_state['month']].values()))
+available_for_savings = st.session_state['balance'] - sum(st.session_state['expenses'][st.session_state['month']].values())
+max_savings = int(float(available_for_savings)) if available_for_savings is not None and available_for_savings >= 0 else 0
 savings_this_month = st.number_input(
     "Amount to save this month",
     min_value=0,
-    max_value=max_savings if max_savings >= 0 else 0,
+    max_value=max_savings,
     value=0,
     step=1,
     key=f"savings_{st.session_state['month']}",
