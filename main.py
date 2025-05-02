@@ -36,28 +36,17 @@ if available_to_spend < 0:
 
 expense_inputs = {}
 for category in expense_categories:
-    current_expense = st.session_state['expenses'][current_month].get(category, 0)
     max_val = 0
     if available_to_spend is not None:
         max_val = int(float(available_to_spend))
 
-    initial_value = min(current_expense, max_val)
+    initial_value = st.session_state['expenses'][current_month].get(category, 0)
 
-    # Explicitly ensure arguments are numeric
-    min_val_arg = 0
-    max_val_arg = int(max_val) if isinstance(max_val, (int, float)) else 0
-    initial_val_arg = int(initial_value) if isinstance(initial_value, (int, float)) else 0
-    step_arg = 1
-
+    # Simplified st.number_input call
     expense_inputs[category] = st.number_input(
         f"Amount spent on {category}",
-        min_value=min_val_arg,
-        max_value=max_val_arg,
-        value=initial_val_arg,
-        step=step_arg,
-        key=f"{category}_{current_month}",
-        label_visibility="visible",
-        key_format=None
+        value=int(initial_value), # Explicitly cast value to int
+        key=f"{category}_{current_month}"
     )
 
 st.subheader("Savings")
