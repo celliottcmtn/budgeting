@@ -13,8 +13,9 @@ st.title("Northern BC Budgeting Game")
 
 # Set initial monthly income at the start of the game
 if st.session_state['month'] == 1:
-    initial_income = st.number_input("Enter your fixed monthly income:", min_value=50, step=50, value=300)
+    initial_income = st.number_input("Enter your fixed monthly income:", min_value=50, step=50, value=950)
     st.session_state['monthly_income'] = float(initial_income)
+    st.session_state['balance'] = float(initial_income) # Set initial balance to the first month's income
 
 st.write(f"Month: {st.session_state['month']}")
 st.write(f"Current Balance: ${st.session_state['balance']:.2f}")
@@ -26,7 +27,7 @@ expense_categories = ["Rent", "Food", "Entertainment", "Transportation", "Person
 st.session_state['expenses'].setdefault(st.session_state['month'], {cat: 0 for cat in expense_categories})
 
 st.subheader("Monthly Expenses")
-available_to_spend = st.session_state['balance'] + st.session_state['monthly_income'] - sum(st.session_state['expenses'][st.session_state['month']].values())
+available_to_spend = st.session_state['balance'] - sum(st.session_state['expenses'][st.session_state['month']].values())
 if available_to_spend < 0:
     available_to_spend = 0
 
@@ -38,27 +39,30 @@ for category in expense_categories:
         max_value=int(available_to_spend),
         value=min(initial_expense_value, int(available_to_spend)),
         step=1,
-        key=f"{category}_{st.session_state['month']}" # Unique key to prevent issues with reruns
+        key=f"{category}_{st.session_state['month']}",
+        label_visibility="visible" # Ensure label is always shown
     )
 
 st.subheader("Savings")
-max_savings = int(st.session_state['balance'] + st.session_state['monthly_income'] - sum(st.session_state['expenses'][st.session_state['month']].values()))
+max_savings = int(st.session_state['balance'] - sum(st.session_state['expenses'][st.session_state['month']].values()))
 savings_this_month = st.number_input(
     "Amount to save this month",
     min_value=0,
     max_value=max_savings,
     value=0,
     step=1,
-    key=f"savings_{st.session_state['month']}" # Unique key
+    key=f"savings_{st.session_state['month']}"
 )
 
 if st.button("End Month"):
     total_spent_this_month = sum(st.session_state['expenses'][st.session_state['month']].values())
-    remaining_balance = st.session_state['balance'] + st.session_state['monthly_income'] - total_spent_this_month - savings_this_month
-    st.session_state['balance'] = float(remaining_balance)
+    remaining_balance_after_spending = st.session_state['balance'] - total_spent_this_month - savings_this_month
+    st.session_state['balance'] = float(remaining_balance_after_spending + st.session_state['monthly_income']) # Add next month's income
     st.session_state['savings'] += float(savings_this_month)
+    st.session_state['month'] += 1
+    st.session_state['expenses'].setdefault(st.session_state['month'], {cat: 0 for cat in expense_categories}) # Reset expenses for the new month
 
-    # Refined Random Events
+    # Refined Random Events (50% chance)
     if random.random() < 0.5:
         event_type = random.choice(['positive', 'negative'])
         if event_type == 'positive':
@@ -84,7 +88,6 @@ if st.button("End Month"):
             st.session_state['balance'] -= event['amount']
             st.warning(f"Oh no! {event['text']} You lost ${event['amount']:.2f}.")
 
-    st.session_state['month'] += 1
     if st.session_state['month'] > 4:
         st.write("Game Over!")
         st.write(f"Final Balance: ${st.session_state['balance']:.2f}")
